@@ -1,3 +1,16 @@
+# Environment variables
+.env
+
+# Previous assignment folders
+q1-basic-llm/
+q2-tweet-templates/
+q3-json-validation/
+q4-pydantic-validation/
+
+# Logs
+logs/
+*.log
+
 # Python
 __pycache__/
 *.py[cod]
@@ -19,16 +32,14 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
-# Virtual Environment
+# Virtual environment
 venv/
 env/
 ENV/
-
-# Environment Variables
-.env
-.env.local
-.env.*.local
+env.bak/
+venv.bak/
 
 # IDE
 .vscode/
@@ -36,20 +47,9 @@ ENV/
 *.swp
 *.swo
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
-
 # Testing
 .pytest_cache/
 .coverage
-htmlcov/
-
-# Documentation
-docs/_build/
 htmlcov/
 
 # OS

@@ -1,131 +1,126 @@
 import sys
+import time
 from typing import Optional
-import structlog
-from .memory_manager import ConversationMemoryManager
 from .api_client import GeminiAPIClient
+from .rate_limiter import RateLimiter
 
-logger = structlog.get_logger()
-
-class CLIChatbot:
-    """Interactive CLI chatbot with conversation memory."""
+class RateLimitedChatbot:
+    """CLI chatbot with token bucket rate limiting."""
     
-    def __init__(self, api_client: GeminiAPIClient):
-        """Initialize chatbot with API client."""
+    def __init__(self, api_client: GeminiAPIClient, requests_per_minute: int = 10):
+        """Initialize chatbot with rate limiter."""
         self.api_client = api_client
-        self.memory_manager = ConversationMemoryManager(window_size=4)
+        self.rate_limiter = RateLimiter(requests_per_minute)
         self.is_running = False
-        
+        self.message_count = 0
+    
     def display_welcome(self) -> None:
-        """Display welcome message and commands."""
+        """Display welcome message with rate limit info."""
         print("\n" + "="*60)
-        print("🤖 AI CHATBOT WITH MEMORY")
+        print("🤖 RATE LIMITED CHATBOT")
         print("="*60)
-        print("I can remember our last 4 conversation turns!")
+        print(f"Rate limit: {self.rate_limiter.requests_per_minute} messages per minute")
         print("\nAvailable commands:")
         print("  • 'quit' or 'exit' - End the conversation")
-        print("  • 'clear' - Clear conversation history")
-        print("  • 'history' - Show conversation history")
-        print("  • 'status' - Show memory buffer status")
-        print("\nStart chatting! Type your message and press Enter.")
+        print("  • 'status' - Show rate limit status")
+        print("  • 'rapid' - Test rapid requests (demo rate limiting)")
+        print("\nStart chatting! Rate limits will be enforced.")
         print("="*60)
     
-    def display_memory_status(self) -> None:
-        """Display current memory buffer status."""
-        status = self.memory_manager.get_memory_status()
-        print(f"\n📊 Memory Status:")
-        print(f"  • Current turn: {status['current_turn']}")
-        print(f"  • Messages in buffer: {status['total_messages']}")
-        print(f"  • Conversation turns: {status['conversation_turns']}")
-        print(f"  • Memory window: {status['memory_window_size']} turns")
-        print(f"  • Buffer full: {'Yes' if status['is_memory_full'] else 'No'}")
+    def display_rate_limit_status(self) -> None:
+        """Display current rate limit status."""
+        status = self.rate_limiter.get_rate_limit_status()
+        print(f"\n📊 Rate Limit Status:")
+        print(f"  • Remaining requests: {status['remaining_requests']}")
+        print(f"  • Limit per minute: {status['limit_per_minute']}")
+        print(f"  • Next token in: {status['reset_in_seconds']}s")
+        print(f"  • Request allowed: {'✅ Yes' if status['allowed'] else '❌ No'}")
+        
+        bucket = status['bucket_status']
+        print(f"  • Bucket tokens: {bucket['current_tokens']}/{bucket['capacity']}")
+        print(f"  • Refill rate: {bucket['refill_rate_per_minute']} tokens/min")
     
-    def display_conversation_history(self) -> None:
-        """Display formatted conversation history."""
-        history = self.memory_manager.get_conversation_history()
+    def handle_rate_limit(self) -> bool:
+        """Handle rate limit exceeded. Returns True to continue, False to quit."""
+        status = self.rate_limiter.get_rate_limit_status()
+        reset_time = status['reset_in_seconds']
         
-        if not history:
-            print("\n📝 No conversation history yet.")
-            return
+        print(f"\n⚠️  Rate limit exceeded!")
+        print(f"Please wait {reset_time:.1f} seconds for next request.")
+        print("Commands: 'status', 'quit', or wait for rate limit reset")
         
-        print("\n📝 Conversation History:")
-        print("-" * 50)
-        
-        current_turn = None
-        for msg in history:
-            if msg['turn'] != current_turn:
-                current_turn = msg['turn']
-                print(f"\nTurn {current_turn}:")
-            
-            role_icon = "👤" if msg['role'] == "user" else "🤖"
-            role_name = "You" if msg['role'] == "user" else "AI"
-            print(f"  {role_icon} {role_name}: {msg['content']}")
-        
-        print("-" * 50)
+        return True
     
     def generate_response(self, user_input: str) -> Optional[str]:
-        """Generate AI response with conversation context."""
+        """Generate AI response with rate limiting."""
+        # Check rate limit first
+        if not self.rate_limiter.is_allowed():
+            return None  # Rate limited
+        
         try:
-            # Build prompt with conversation context
-            context = self.memory_manager.get_context_for_llm()
-            
-            if context:
-                prompt = f"""You are a helpful AI assistant having a conversation. Here's our conversation history:
-
-{context}
-
-User: {user_input}
-
-Please provide a natural, helpful response that takes into account our conversation history. Keep your response concise and engaging."""
-            else:
-                prompt = f"""You are a helpful AI assistant. The user said: {user_input}
-
-Please provide a natural, helpful response. Keep it concise and engaging."""
-            
-            logger.info("Generating response", user_input_length=len(user_input), has_context=bool(context))
-            
+            prompt = f"You are a helpful assistant. User said: {user_input}\n\nProvide a helpful response:"
             response = self.api_client.call_api(prompt)
-            
-            logger.info("Response generated successfully", response_length=len(response))
+            self.message_count += 1
             return response
-            
         except Exception as e:
-            error_msg = f"Sorry, I encountered an error: {str(e)}"
-            logger.error("Failed to generate response", error=str(e))
-            return error_msg
+            return f"Error: {str(e)}"
     
     def handle_command(self, user_input: str) -> bool:
         """Handle special commands. Returns True if command was handled."""
         command = user_input.lower().strip()
         
         if command in ['quit', 'exit']:
-            print("\n👋 Goodbye! Thanks for chatting!")
-            return True
-        
-        elif command == 'clear':
-            self.memory_manager.clear_memory()
-            print("\n🧹 Conversation history cleared!")
-            return True
-        
-        elif command == 'history':
-            self.display_conversation_history()
+            print("\n👋 Goodbye!")
             return True
         
         elif command == 'status':
-            self.display_memory_status()
+            self.display_rate_limit_status()
+            return True
+        
+        elif command == 'rapid':
+            self.demo_rapid_requests()
             return True
         
         return False
     
+    def demo_rapid_requests(self) -> None:
+        """Demo rapid requests to show rate limiting."""
+        print("\n🚀 Rapid Request Demo (testing rate limits)...")
+        
+        for i in range(5):
+            print(f"\nRequest {i+1}: ", end="", flush=True)
+            
+            if self.rate_limiter.is_allowed():
+                print("✅ Allowed")
+            else:
+                status = self.rate_limiter.get_rate_limit_status()
+                print(f"❌ Rate limited (wait {status['reset_in_seconds']:.1f}s)")
+            
+            time.sleep(0.5)  # Small delay between requests
+        
+        self.display_rate_limit_status()
+    
+    def get_prompt_with_tokens(self) -> str:
+        """Get input prompt showing available tokens."""
+        status = self.rate_limiter.get_rate_limit_status()
+        remaining = status['remaining_requests']
+        
+        if remaining > 0:
+            return f"\n[Tokens: {remaining}] You: "
+        else:
+            reset_time = status['reset_in_seconds']
+            return f"\n[Rate Limited - wait {reset_time:.1f}s] You: "
+    
     def run(self) -> None:
-        """Start the interactive CLI chatbot."""
+        """Start the rate limited chatbot."""
         self.display_welcome()
         self.is_running = True
         
         try:
             while self.is_running:
-                # Get user input
+                # Get user input with token status
                 try:
-                    user_input = input(f"\n[Turn {self.memory_manager.turn_number + 1}] You: ").strip()
+                    user_input = input(self.get_prompt_with_tokens()).strip()
                 except (KeyboardInterrupt, EOFError):
                     print("\n\n👋 Goodbye!")
                     break
@@ -139,23 +134,21 @@ Please provide a natural, helpful response. Keep it concise and engaging."""
                         break
                     continue
                 
-                # Add user message to memory
-                self.memory_manager.add_user_message(user_input)
-                
-                # Generate and display AI response
-                print(f"\n🤖 AI: ", end="", flush=True)
+                # Try to generate response
                 response = self.generate_response(user_input)
                 
-                if response:
-                    print(response)
-                    # Add AI response to memory
-                    self.memory_manager.add_ai_message(response)
-                else:
-                    print("I'm having trouble right now. Please try again.")
+                if response is None:
+                    # Rate limited
+                    if not self.handle_rate_limit():
+                        break
+                    continue
+                
+                # Display response
+                print(f"\n🤖 AI: {response}")
         
         except Exception as e:
-            logger.error("Chatbot error", error=str(e))
             print(f"\n❌ An unexpected error occurred: {e}")
         
         finally:
             self.is_running = False
+            print(f"\nTotal messages sent: {self.message_count}")
