@@ -4,3 +4,4 @@ structlog==23.2.0
 tenacity==8.2.3
 pytest==7.4.0
 pytest-mock==3.11.1
+pydantic==2.8.2

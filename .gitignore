@@ -1,6 +1,14 @@
 # Environment variables
 .env
 
+# Previous assignment folders
+q1-basic-llm/
+q2-tweet-templates/
+
+# Logs
+logs/
+*.log
+
 # Python
 __pycache__/
 *.py[cod]
@@ -37,10 +45,11 @@ venv.bak/
 *.swp
 *.swo
 
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
 # OS
 .DS_Store
 Thumbs.db
-
-# Custom folders
-q1-basic-llm/
-q2-tweet-templates/
