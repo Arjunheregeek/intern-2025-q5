@@ -3,6 +3,8 @@ import requests
 from dotenv import load_dotenv
 
 class GeminiAPIClient:
+    """Simple Gemini API client for chatbot."""
+    
     def __init__(self):
         load_dotenv()
         self.api_key = os.getenv('GEMINI_API_KEY')
@@ -12,6 +14,7 @@ class GeminiAPIClient:
         self.url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={self.api_key}"
     
     def call_api(self, prompt: str) -> str:
+        """Call Gemini API and return response text."""
         payload = {
             "contents": [{
                 "parts": [{
