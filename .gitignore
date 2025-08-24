@@ -40,3 +40,7 @@ venv.bak/
 # OS
 .DS_Store
 Thumbs.db
+
+# Custom folders
+q1-basic-llm/
+q2-tweet-templates/

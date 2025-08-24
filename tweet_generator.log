@@ -1,0 +1,28 @@
+2025-08-24T11:09:57.238629Z [info     ] === LOGGING SYSTEM INITIALIZED === log_file=tweet_generator.log
+2025-08-24T11:09:57.238629Z [info     ] Log file created successfully  file_path=tweet_generator.log
+2025-08-24T11:09:57.250396Z [info     ] Log file verified writable and readable content_length=205
+2025-08-24T11:09:57.250396Z [info     ] === APPLICATION STARTING ===
+2025-08-24T11:09:57.363418Z [info     ] Log file status                exists=True has_content=True size=373
+2025-08-24T11:09:57.363418Z [info     ] Starting Tweet Template System Demo with Logging and Retries
+2025-08-24T11:09:57.363418Z [info     ] Processing example             description=Professional AI tweet example_number=1 parameters={'topic': 'Artificial Intelligence', 'tone': 'professional', 'max_words': 25, 'description': 'Professional AI tweet'}
+2025-08-24T11:09:57.369751Z [info     ] Starting tweet generation      max_retries=3 max_words=25 tone=professional topic=Artificial Intelligence
+2025-08-24T11:09:57.370665Z [info     ] Function call attempt          attempt=1
+2025-08-24T11:09:57.373464Z [info     ] Making API request             prompt_length=301 prompt_preview=Generate a professional tweet about Artificial Intelligence. 
+The tweet should be engaging and appro... url_endpoint=gemini-1.5-flash
+2025-08-24T11:09:59.964771Z [info     ] API request successful         latency_ms=2593.31 response_length=100 response_preview=AI: Revolutionizing industries, solving complex problems, and shaping our future.  Learn more today! status_code=200
+2025-08-24T11:09:59.964771Z [info     ] Tweet generation successful    result_length=100 tone=professional topic=Artificial Intelligence
+2025-08-24T11:09:59.964771Z [info     ] Processing example             description=Humorous coffee tweet example_number=2 parameters={'topic': 'Coffee', 'tone': 'humorous', 'max_words': 20, 'description': 'Humorous coffee tweet'}
+2025-08-24T11:09:59.964771Z [info     ] Starting tweet generation      max_retries=3 max_words=20 tone=humorous topic=Coffee
+2025-08-24T11:09:59.964771Z [info     ] Function call attempt          attempt=1
+2025-08-24T11:09:59.964771Z [info     ] Making API request             prompt_length=280 prompt_preview=Generate a humorous tweet about Coffee. 
+The tweet should be engaging and appropriate for social med... url_endpoint=gemini-1.5-flash
+2025-08-24T11:10:00.971046Z [info     ] API request successful         latency_ms=1006.28 response_length=46 response_preview=My blood type is now officially:  caffeinated. status_code=200
+2025-08-24T11:10:00.971046Z [info     ] Tweet generation successful    result_length=46 tone=humorous topic=Coffee
+2025-08-24T11:10:00.987083Z [info     ] Processing example             description=Casual remote work tweet example_number=3 parameters={'topic': 'Remote Work', 'tone': 'casual', 'max_words': 30, 'description': 'Casual remote work tweet'}
+2025-08-24T11:10:00.987083Z [info     ] Starting tweet generation      max_retries=3 max_words=30 tone=casual topic=Remote Work
+2025-08-24T11:10:00.987083Z [info     ] Function call attempt          attempt=1
+2025-08-24T11:10:00.987083Z [info     ] Making API request             prompt_length=283 prompt_preview=Generate a casual tweet about Remote Work. 
+The tweet should be engaging and appropriate for social ... url_endpoint=gemini-1.5-flash
+2025-08-24T11:10:02.168986Z [info     ] API request successful         latency_ms=1181.9 response_length=104 response_preview=Remote work: pajamas all day, boss?  Don't mind if I do!  Productivity?  Let's just say it's *flexib... status_code=200
+2025-08-24T11:10:02.188598Z [info     ] Tweet generation successful    result_length=104 tone=casual topic=Remote Work
+2025-08-24T11:10:02.190422Z [info     ] === Demo Completed Successfully ===
